@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#1e3a8a">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Estudo — 102 Blocos</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -13,9 +14,42 @@
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
     background: #f4f6f9; color: #1f2937; line-height: 1.6; font-size: 16px;
     min-height: 100dvh;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
   }
-  .container { width:100%; max-width:640px; margin:0 auto; padding:12px; }
+
+  /* ── HEADER ── */
+  .header {
+    position: sticky; top: 0; z-index: 100;
+    background: #1e3a8a; color: #fff;
+    padding: 10px 14px 10px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    box-shadow: 0 2px 8px rgba(0,0,0,.2);
+  }
+  .header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .header-title { font-size: 1rem; font-weight: 800; }
+  .header-progress-text { font-size: .78rem; opacity: .85; }
+  .progress-bar { height: 4px; background: rgba(255,255,255,.25); border-radius: 2px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #4ade80; border-radius: 2px; transition: width .4s; }
+
+  /* ── FILTRO ── */
+  .filtro-bar {
+    background: #fff; border-bottom: 1px solid #e5e7eb;
+    padding: 8px 14px; display: flex; gap: 8px; align-items: center;
+  }
+  .btn-filtro {
+    flex: 1; min-height: 36px; border: 1.5px solid #e5e7eb; border-radius: 8px;
+    font-size: .82rem; font-weight: 700; font-family: inherit; cursor: pointer;
+    background: #fff; color: #6b7280;
+  }
+  .btn-filtro.ativo { background: #1e3a8a; color: #fff; border-color: #1e3a8a; }
+  .btn-proximo {
+    min-height: 36px; padding: 0 14px; border: none; border-radius: 8px;
+    font-size: .82rem; font-weight: 700; font-family: inherit; cursor: pointer;
+    background: #f59e0b; color: #fff;
+  }
+
+  /* ── CONTEÚDO ── */
+  .container { width: 100%; max-width: 640px; margin: 0 auto; padding: 12px 12px 120px; }
 
   .materia { margin-bottom: 24px; }
   .materia h2 {
@@ -39,8 +73,10 @@
 
   .bloco .titulo {
     font-size: .78rem; font-weight: 700; color: #1e3a8a;
-    text-transform: uppercase; letter-spacing: .4px; margin-bottom: 6px;
+    text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px;
+    display: flex; align-items: center; justify-content: space-between;
   }
+  .bloco .duracao { font-size: .72rem; color: #9ca3af; font-weight: 500; text-transform: none; letter-spacing: 0; }
   .bloco h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; color: #111827; }
   .bloco .texto { font-size: .95rem; color: #374151; }
   .bloco .texto p { margin-bottom: 10px; }
@@ -53,13 +89,78 @@
     background: #1e3a8a; color: #fff;
     display: flex; align-items: center; justify-content: center; gap: 6px;
   }
-  .btn-ouvir:active { background: #1e40af; }
+  .btn-ouvir:active { opacity: .85; }
   .btn-ouvir.tocando { background: #dc2626; }
-  .btn-ouvir.tocando:active { background: #b91c1c; }
 
-  @media (min-width:600px) {
+  /* ── MINI-PLAYER ── */
+  .mini-player {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+    background: #fff; border-top: 1px solid #e5e7eb;
+    box-shadow: 0 -4px 20px rgba(0,0,0,.12);
+    padding: 10px 14px;
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    display: none;
+  }
+  .mini-player.visivel { display: block; }
+  .mini-info { font-size: .78rem; color: #6b7280; margin-bottom: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini-info strong { color: #111827; font-size: .88rem; }
+  .mini-controls { display: flex; gap: 8px; align-items: center; }
+  .mini-btn {
+    flex: 1; min-height: 44px; border: none; border-radius: 10px;
+    font-size: .88rem; font-weight: 700; font-family: inherit; cursor: pointer;
+  }
+  .mini-btn-parar { background: #dc2626; color: #fff; }
+  .mini-btn-parar:active { opacity: .85; }
+  .mini-btn-proximo { background: #1e3a8a; color: #fff; }
+  .mini-btn-proximo:active { opacity: .85; }
+  .mini-btn-anterior { background: #e5e7eb; color: #374151; }
+  .mini-btn-anterior:active { opacity: .85; }
+
+  /* velocidade */
+  .mini-vel { display: flex; gap: 6px; margin-top: 8px; }
+  .btn-vel {
+    flex: 1; min-height: 34px; border: 1.5px solid #e5e7eb; border-radius: 8px;
+    font-size: .78rem; font-weight: 700; font-family: inherit; cursor: pointer;
+    background: #fff; color: #6b7280;
+  }
+  .btn-vel.ativa { background: #1e3a8a; color: #fff; border-color: #1e3a8a; }
+
+  /* modo contínuo toggle */
+  .mini-modo { margin-top: 8px; display: flex; align-items: center; gap: 8px; }
+  .toggle-label { font-size: .78rem; color: #6b7280; flex: 1; }
+  .toggle-wrap { position: relative; width: 44px; height: 26px; }
+  .toggle-wrap input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0; background: #e5e7eb; border-radius: 13px;
+    cursor: pointer; transition: background .2s;
+  }
+  .toggle-slider::after {
+    content: ''; position: absolute; left: 3px; top: 3px;
+    width: 20px; height: 20px; border-radius: 50%; background: #fff;
+    transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
+  }
+  .toggle-wrap input:checked + .toggle-slider { background: #16a34a; }
+  .toggle-wrap input:checked + .toggle-slider::after { transform: translateX(18px); }
+
+  /* retomada */
+  .banner-retomar {
+    background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px;
+    padding: 12px 14px; margin: 8px 12px;
+    display: flex; align-items: center; gap: 10px; display: none;
+  }
+  .banner-retomar.visivel { display: flex; }
+  .banner-retomar-texto { flex: 1; font-size: .85rem; color: #1e3a8a; }
+  .banner-btn-retomar {
+    border: none; border-radius: 8px; background: #1e3a8a; color: #fff;
+    font-size: .8rem; font-weight: 700; padding: 8px 14px; cursor: pointer; white-space: nowrap;
+  }
+  .banner-btn-fechar {
+    border: none; background: none; color: #9ca3af; font-size: 1.1rem; cursor: pointer; padding: 4px;
+  }
+
+  @media (min-width: 600px) {
     body { font-size: 17px; }
-    .container { padding: 20px; }
+    .container { padding: 20px 20px 140px; }
     .bloco { padding: 22px 20px; }
     .bloco h3 { font-size: 1.15rem; }
     .bloco .texto { font-size: 1rem; }
@@ -68,14 +169,54 @@
 </style>
 </head>
 <body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-row">
+    <span class="header-title">📚 Estudo — 102 Blocos</span>
+    <span class="header-progress-text" id="progresso-texto">0 / 102</span>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="barra-progresso" style="width:0%"></div></div>
+</div>
+
+<!-- FILTRO -->
+<div class="filtro-bar">
+  <button class="btn-filtro ativo" id="btn-todos" onclick="setFiltro('todos')">Todos</button>
+  <button class="btn-filtro" id="btn-faltam" onclick="setFiltro('faltam')">Não ouvidos</button>
+  <button class="btn-proximo" onclick="irParaProximo()">⏭ Próximo</button>
+</div>
+
+<!-- BANNER RETOMAR -->
+<div class="banner-retomar" id="banner-retomar">
+  <span class="banner-retomar-texto" id="banner-texto">Continuar de onde parou?</span>
+  <button class="banner-btn-retomar" id="banner-btn">Retomar</button>
+  <button class="banner-btn-fechar" onclick="fecharBanner()">✕</button>
+</div>
+
+<!-- CONTEÚDO -->
 <div class="container">
   <div id="materias"></div>
 </div>
 
+<!-- MINI-PLAYER -->
+<div class="mini-player" id="mini-player">
+  <div class="mini-info" id="mini-info">—</div>
+  <div class="mini-controls">
+    <button class="mini-btn mini-btn-anterior" onclick="anteriorBloco()">⏮ Anterior</button>
+    <button class="mini-btn mini-btn-parar" onclick="parar()">⏹ Parar</button>
+    <button class="mini-btn mini-btn-proximo" onclick="proximoBloco()">⏭ Próximo</button>
+  </div>
+  <div class="mini-vel" id="mini-vel"></div>
+  <div class="mini-modo">
+    <span class="toggle-label">Modo contínuo — avança automaticamente</span>
+    <label class="toggle-wrap">
+      <input type="checkbox" id="toggle-continuo" onchange="salvar()">
+      <span class="toggle-slider"></span>
+    </label>
+  </div>
+</div>
+
 <script>
-/* =====================================================
-   CONTEÚDO — 6 Matérias + Extras = 102 Blocos
-   ===================================================== */
 const MATERIAS = [
   /* ============================================================
      👥 RH — 25 BLOCOS
@@ -1293,73 +1434,202 @@ const MATERIAS = [
 ];
 
 /* =====================
-   LÓGICA
+   ESTADO
    ===================== */
-const STORAGE_KEY = 'estudo_102_limpo_v1';
+const STORAGE_KEY = 'estudo_102_v2';
 let ouvidos = {};
 let tocandoChave = null;
+let filtroAtual = 'todos';
+let velocidade = 1.0;
 let synth = window.speechSynthesis;
 
-const materiasEl = document.getElementById('materias');
+/* índice flat de todos os blocos */
+let BLOCOS_FLAT = [];
+MATERIAS.forEach((m, mi) => {
+  m.blocos.forEach((b, bi) => {
+    BLOCOS_FLAT.push({ mi, bi, chave: mi + '-' + bi, materia: m.nome, icone: m.icone, heading: b.heading, titulo: b.titulo });
+  });
+});
 
-function salvar() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ ouvidos })); } catch (e) {}
+/* estimar duração em minutos */
+function estimarDuracao(texto) {
+  const chars = texto.length;
+  const segundos = chars / (14 * velocidade);
+  const mins = segundos / 60;
+  if (mins < 1) return '< 1 min';
+  return Math.round(mins) + ' min';
 }
+
+/* =====================
+   PERSISTÊNCIA
+   ===================== */
+function salvar() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      ouvidos,
+      ultimaChave: tocandoChave,
+      continuo: document.getElementById('toggle-continuo').checked,
+      velocidade
+    }));
+  } catch(e) {}
+}
+
 function carregar() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    const d = JSON.parse(raw);
-    ouvidos = d.ouvidos || {};
-  } catch (e) {}
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
 }
+
+/* =====================
+   MEDIA SESSION (Watch + lock screen)
+   ===================== */
+function atualizarMediaSession(chave) {
+  if (!('mediaSession' in navigator)) return;
+  const item = BLOCOS_FLAT.find(b => b.chave === chave);
+  if (!item) return;
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: item.heading,
+    artist: item.icone + ' ' + item.materia,
+    album: 'Estudo — 102 Blocos'
+  });
+  navigator.mediaSession.playbackState = 'playing';
+  navigator.mediaSession.setActionHandler('nexttrack', () => proximoBloco());
+  navigator.mediaSession.setActionHandler('previoustrack', () => anteriorBloco());
+  navigator.mediaSession.setActionHandler('pause', () => parar());
+  navigator.mediaSession.setActionHandler('play', () => { if (tocandoChave) tocarPorChave(tocandoChave); });
+}
+
+function limparMediaSession() {
+  if (!('mediaSession' in navigator)) return;
+  navigator.mediaSession.playbackState = 'none';
+  navigator.mediaSession.setActionHandler('nexttrack', null);
+  navigator.mediaSession.setActionHandler('previoustrack', null);
+}
+
+/* AudioContext silencioso para acordar a sessão de áudio no Safari iOS */
+let audioCtxIniciado = false;
+function acordarAudioSession() {
+  if (audioCtxIniciado) return;
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const buf = ctx.createBuffer(1, 1, 22050);
+    const src = ctx.createBufferSource();
+    src.buffer = buf;
+    src.connect(ctx.destination);
+    src.start(0);
+    audioCtxIniciado = true;
+  } catch(e) {}
+}
+
+/* =====================
+   RENDER
+   ===================== */
+const materiasEl = document.getElementById('materias');
 
 function render() {
   materiasEl.innerHTML = '';
+  const mostrarSoFaltam = filtroAtual === 'faltam';
+
   MATERIAS.forEach((m, mi) => {
+    const blocosVisiveis = m.blocos.filter((_, bi) => {
+      if (!mostrarSoFaltam) return true;
+      return !ouvidos[mi + '-' + bi];
+    });
+    if (blocosVisiveis.length === 0) return;
+
     const sec = document.createElement('div');
     sec.className = 'materia';
     sec.id = 'materia-' + mi;
-    sec.innerHTML = `<h2>${m.icone} ${m.nome} <span class="badge">${m.blocos.length}</span></h2>`;
+
+    const ouvida = m.blocos.filter((_, bi) => ouvidos[mi + '-' + bi]).length;
+    sec.innerHTML = `<h2>${m.icone} ${m.nome} <span class="badge">${ouvida}/${m.blocos.length}</span></h2>`;
     materiasEl.appendChild(sec);
 
     m.blocos.forEach((b, bi) => {
       const chave = mi + '-' + bi;
+      if (mostrarSoFaltam && ouvidos[chave]) return;
+
       const div = document.createElement('div');
-      div.className = 'bloco' + (ouvidos[chave] ? ' ouvido' : '');
+      div.className = 'bloco' + (ouvidos[chave] ? ' ouvido' : '') + (tocandoChave === chave ? ' tocando' : '');
       div.id = 'bloco-' + chave;
+
+      const dur = estimarDuracao(b.texto);
       div.innerHTML = `
-        <div class="titulo">${b.titulo}${ouvidos[chave] ? ' • ouvido' : ''}</div>
+        <div class="titulo">
+          <span>${b.titulo}${ouvidos[chave] ? ' ✓' : ''}</span>
+          <span class="duracao">~${dur}</span>
+        </div>
         <h3>${b.heading}</h3>
         <div class="texto">${b.texto.split("\n\n").map(p => `<p>${p}</p>`).join('')}</div>
         <div class="actions">
-          <button class="btn-ouvir" data-chave="${chave}">🔊 Ouvir</button>
+          <button class="btn-ouvir${tocandoChave === chave ? ' tocando' : ''}" data-chave="${chave}">
+            ${tocandoChave === chave ? '⏹ Parar' : '🔊 Ouvir'}
+          </button>
         </div>
       `;
       sec.appendChild(div);
     });
   });
 
-  document.querySelectorAll('.btn-ouvir').forEach(b => {
-    b.addEventListener('click', () => {
-      const chave = b.dataset.chave;
+  document.querySelectorAll('.btn-ouvir').forEach(btn => {
+    btn.addEventListener('click', () => {
+      acordarAudioSession();
+      const chave = btn.dataset.chave;
       if (tocandoChave === chave) parar();
       else tocarPorChave(chave);
     });
   });
+
+  atualizarProgresso();
 }
 
+function atualizarProgresso() {
+  const total = BLOCOS_FLAT.length;
+  const done = Object.keys(ouvidos).filter(k => ouvidos[k]).length;
+  document.getElementById('progresso-texto').textContent = done + ' / ' + total;
+  document.getElementById('barra-progresso').style.width = Math.round(done / total * 100) + '%';
+}
+
+/* =====================
+   VELOCIDADE
+   ===================== */
+const VELOCIDADES = [0.75, 1.0, 1.25, 1.5, 1.75];
+
+function renderVelocidades() {
+  const wrap = document.getElementById('mini-vel');
+  wrap.innerHTML = '';
+  VELOCIDADES.forEach(v => {
+    const btn = document.createElement('button');
+    btn.className = 'btn-vel' + (velocidade === v ? ' ativa' : '');
+    btn.textContent = v + '×';
+    btn.onclick = () => {
+      velocidade = v;
+      salvar();
+      renderVelocidades();
+    };
+    wrap.appendChild(btn);
+  });
+}
+
+/* =====================
+   PLAYER
+   ===================== */
 function parar() {
   synth.cancel();
+  limparMediaSession();
   if (tocandoChave) {
     const el = document.getElementById('bloco-' + tocandoChave);
     if (el) {
       el.classList.remove('tocando');
       const btn = el.querySelector('.btn-ouvir');
-      if (btn) btn.textContent = '🔊 Ouvir';
+      if (btn) { btn.classList.remove('tocando'); btn.textContent = '🔊 Ouvir'; }
     }
   }
   tocandoChave = null;
+  salvar();
+  document.getElementById('mini-player').classList.remove('visivel');
 }
 
 function tocarPorChave(chave) {
@@ -1367,34 +1637,65 @@ function tocarPorChave(chave) {
   const [mi, bi] = chave.split('-').map(Number);
   const b = MATERIAS[mi].blocos[bi];
   tocandoChave = chave;
+  salvar();
 
   const el = document.getElementById('bloco-' + chave);
-  el.classList.add('tocando');
-  const btn = el.querySelector('.btn-ouvir');
-  btn.textContent = '⏹ Parar';
+  if (el) {
+    el.classList.add('tocando');
+    const btn = el.querySelector('.btn-ouvir');
+    if (btn) { btn.classList.add('tocando'); btn.textContent = '⏹ Parar'; }
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  /* mini-player */
+  const flat = BLOCOS_FLAT.find(f => f.chave === chave);
+  document.getElementById('mini-info').innerHTML =
+    '<strong>' + b.heading + '</strong> — ' + flat.icone + ' ' + flat.materia;
+  document.getElementById('mini-player').classList.add('visivel');
+
+  atualizarMediaSession(chave);
 
   const paragrafos = b.texto.split("\n\n").filter(p => p.trim().length > 0);
   let idxP = 0;
 
   function falarProximo() {
+    if (tocandoChave !== chave) return; /* foi interrompido */
     if (idxP >= paragrafos.length) {
+      /* bloco concluído */
       ouvidos[chave] = true;
       salvar();
       const elAtual = document.getElementById('bloco-' + chave);
       if (elAtual) {
         elAtual.classList.remove('tocando');
         elAtual.classList.add('ouvido');
-        const titulo = elAtual.querySelector('.titulo');
-        titulo.textContent = b.titulo + ' • ouvido';
+        const tit = elAtual.querySelector('.titulo span');
+        if (tit && !tit.textContent.includes('✓')) tit.textContent += ' ✓';
+        const btn = elAtual.querySelector('.btn-ouvir');
+        if (btn) { btn.classList.remove('tocando'); btn.textContent = '🔊 Ouvir'; }
       }
-      const btnAtual = elAtual.querySelector('.btn-ouvir');
-      if (btnAtual) btnAtual.textContent = '🔊 Ouvir';
+      atualizarProgresso();
       tocandoChave = null;
+
+      /* modo contínuo */
+      const continuo = document.getElementById('toggle-continuo').checked;
+      if (continuo) {
+        const idx = BLOCOS_FLAT.findIndex(f => f.chave === chave);
+        /* próximo não ouvido */
+        for (let i = idx + 1; i < BLOCOS_FLAT.length; i++) {
+          if (!ouvidos[BLOCOS_FLAT[i].chave]) {
+            setTimeout(() => tocarPorChave(BLOCOS_FLAT[i].chave), 800);
+            return;
+          }
+        }
+      }
+      document.getElementById('mini-player').classList.remove('visivel');
+      limparMediaSession();
       return;
     }
+
     const u = new SpeechSynthesisUtterance(paragrafos[idxP]);
     u.lang = 'pt-BR';
-    u.rate = 1;
+    u.rate = velocidade;
     u.pitch = 1;
     u.onend = () => { idxP++; falarProximo(); };
     u.onerror = () => { idxP++; falarProximo(); };
@@ -1404,8 +1705,82 @@ function tocarPorChave(chave) {
   falarProximo();
 }
 
+function proximoBloco() {
+  const chaveAtual = tocandoChave;
+  const idx = chaveAtual ? BLOCOS_FLAT.findIndex(f => f.chave === chaveAtual) : -1;
+  for (let i = idx + 1; i < BLOCOS_FLAT.length; i++) {
+    if (filtroAtual === 'faltam' && ouvidos[BLOCOS_FLAT[i].chave]) continue;
+    acordarAudioSession();
+    tocarPorChave(BLOCOS_FLAT[i].chave);
+    return;
+  }
+}
+
+function anteriorBloco() {
+  const chaveAtual = tocandoChave;
+  const idx = chaveAtual ? BLOCOS_FLAT.findIndex(f => f.chave === chaveAtual) : BLOCOS_FLAT.length;
+  for (let i = idx - 1; i >= 0; i--) {
+    acordarAudioSession();
+    tocarPorChave(BLOCOS_FLAT[i].chave);
+    return;
+  }
+}
+
+/* =====================
+   FILTRO
+   ===================== */
+function setFiltro(tipo) {
+  filtroAtual = tipo;
+  document.getElementById('btn-todos').classList.toggle('ativo', tipo === 'todos');
+  document.getElementById('btn-faltam').classList.toggle('ativo', tipo === 'faltam');
+  render();
+}
+
+function irParaProximo() {
+  for (let i = 0; i < BLOCOS_FLAT.length; i++) {
+    if (!ouvidos[BLOCOS_FLAT[i].chave]) {
+      const el = document.getElementById('bloco-' + BLOCOS_FLAT[i].chave);
+      if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    }
+  }
+}
+
+/* =====================
+   BANNER RETOMAR
+   ===================== */
+function fecharBanner() {
+  document.getElementById('banner-retomar').classList.remove('visivel');
+}
+
+function mostrarBanner(chave) {
+  const item = BLOCOS_FLAT.find(f => f.chave === chave);
+  if (!item) return;
+  document.getElementById('banner-texto').textContent =
+    'Continuar onde parou? ' + item.heading;
+  document.getElementById('banner-btn').onclick = () => {
+    fecharBanner();
+    acordarAudioSession();
+    tocarPorChave(chave);
+  };
+  document.getElementById('banner-retomar').classList.add('visivel');
+}
+
+/* =====================
+   INIT
+   ===================== */
 function init() {
-  carregar();
+  const dados = carregar();
+  if (dados) {
+    ouvidos = dados.ouvidos || {};
+    velocidade = dados.velocidade || 1.0;
+    if (dados.continuo) document.getElementById('toggle-continuo').checked = true;
+
+    /* mostrar banner de retomada */
+    if (dados.ultimaChave && BLOCOS_FLAT.find(f => f.chave === dados.ultimaChave)) {
+      mostrarBanner(dados.ultimaChave);
+    }
+  }
+  renderVelocidades();
   render();
 }
 
