@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#1e3a8a">
+<meta name="theme-color" content="#0f172a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Estudo — 102 Blocos</title>
+<title>Estudo — Fila Contínua</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html { -webkit-text-size-adjust: 100%; }
@@ -15,14 +15,14 @@
     background: #f4f6f9; color: #1f2937; line-height: 1.6; font-size: 16px;
     min-height: 100dvh;
     padding: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
-    padding-bottom: calc(72px + env(safe-area-inset-bottom));
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
   }
   .container { width:100%; max-width:640px; margin:0 auto; padding:12px; }
 
-  /* ===== BARRA DE PROGRESSO GLOBAL ===== */
+  /* ===== BARRA DE PROGRESSO ===== */
   .progress-bar {
     position: sticky; top: 0; z-index: 50;
-    background: rgba(244,246,249,.92); backdrop-filter: blur(10px);
+    background: rgba(244,246,249,.94); backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     padding: 10px 12px 8px;
     border-bottom: 1px solid #e5e7eb;
@@ -32,14 +32,13 @@
   .progress-count { font-size:.75rem; font-weight:700; color:#6b7280; }
   .progress-track { height:6px; background:#e5e7eb; border-radius:99px; overflow:hidden; }
   .progress-fill { height:100%; width:0%; background:linear-gradient(90deg,#1e3a8a,#3b82f6); border-radius:99px; transition:width .3s; }
-  .progress-actions { display:flex; gap:6px; margin-top:8px; }
+  .progress-actions { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
   .chip {
     font-size:.7rem; font-weight:700; padding:5px 10px; border-radius:99px;
     border:1px solid #d1d5db; background:#fff; color:#374151; cursor:pointer;
     font-family:inherit; min-height:30px;
   }
   .chip.active { background:#1e3a8a; color:#fff; border-color:#1e3a8a; }
-  .chip.continuo.active { background:#16a34a; border-color:#16a34a; }
 
   .materia { margin-bottom: 24px; }
   .materia h2 {
@@ -57,7 +56,7 @@
   .bloco {
     background: #fff; border-radius: 14px; padding: 16px 14px;
     box-shadow: 0 2px 8px rgba(0,0,0,.05); margin-bottom: 12px;
-    border-left: 4px solid #e5e7eb; transition: border-color .2s;
+    border-left: 4px solid #e5e7eb; transition: border-color .2s, box-shadow .2s;
   }
   .bloco.ouvido { border-left-color: #16a34a; }
   .bloco.tocando { border-left-color: #1e3a8a; box-shadow: 0 4px 16px rgba(30,58,138,.18); }
@@ -72,9 +71,9 @@
   .bloco .texto p { margin-bottom: 10px; }
   .bloco .texto p:last-child { margin-bottom: 0; }
 
-  .bloco .actions { margin-top: 14px; }
+  .bloco .actions { margin-top: 14px; display:flex; gap:8px; }
   .btn-ouvir {
-    width: 100%; min-height: 48px; border: none; border-radius: 10px;
+    flex:1; min-height: 48px; border: none; border-radius: 10px;
     font-size: .95rem; font-weight: 700; font-family: inherit; cursor: pointer;
     background: #1e3a8a; color: #fff;
     display: flex; align-items: center; justify-content: center; gap: 6px;
@@ -82,15 +81,21 @@
   .btn-ouvir:active { background: #1e40af; }
   .btn-ouvir.tocando { background: #dc2626; }
   .btn-ouvir.tocando:active { background: #b91c1c; }
+  .btn-fila {
+    min-height:48px; padding:0 14px; border:none; border-radius:10px;
+    background:#e5e7eb; color:#374151; font-weight:700; font-family:inherit;
+    cursor:pointer; font-size:.85rem;
+  }
+  .btn-fila:active { background:#d1d5db; }
 
-  /* ===== MINI-PLAYER FIXO ===== */
+  /* ===== MINI-PLAYER ===== */
   .mini-player {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 100;
-    background: rgba(30,58,138,.97);
+    background: rgba(15,23,42,.97);
     -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
     color: #fff;
     padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
-    box-shadow: 0 -4px 20px rgba(0,0,0,.25);
+    box-shadow: 0 -4px 20px rgba(0,0,0,.35);
     transform: translateY(120%);
     transition: transform .3s ease;
   }
@@ -98,35 +103,37 @@
 
   .mini-info {
     display: flex; align-items: center; justify-content: space-between;
-    gap: 8px; margin-bottom: 6px;
+    gap: 8px; margin-bottom: 8px;
   }
   .mini-title {
-    font-size: .75rem; font-weight: 700; color: #dbeafe;
+    font-size: .78rem; font-weight: 700; color: #dbeafe;
     white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     flex: 1;
   }
   .mini-rate {
     font-size: .7rem; font-weight: 800; background: rgba(255,255,255,.18);
-    padding: 3px 8px; border-radius: 99px; cursor: pointer; border: none;
-    color: #fff; font-family: inherit; min-height:28px;
+    padding: 4px 10px; border-radius: 99px; cursor: pointer; border: none;
+    color: #fff; font-family: inherit; min-height:30px;
   }
   .mini-controls {
-    display: flex; align-items: center; justify-content: center; gap: 8px;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
   }
   .mini-btn {
-    background: rgba(255,255,255,.15); border: none; color: #fff;
-    border-radius: 50%; width: 44px; height: 44px; font-size: 1.1rem;
+    background: rgba(255,255,255,.14); border: none; color: #fff;
+    border-radius: 50%; width: 46px; height: 46px; font-size: 1.15rem;
     display: flex; align-items: center; justify-content: center;
     cursor: pointer; font-family: inherit;
+    transition: background .15s;
   }
   .mini-btn:active { background: rgba(255,255,255,.3); }
-  .mini-btn.play { width: 52px; height: 52px; font-size: 1.3rem; background:#fff; color:#1e3a8a; }
+  .mini-btn.play { width: 54px; height: 54px; font-size: 1.35rem; background:#fff; color:#0f172a; }
   .mini-btn.play:active { background:#dbeafe; }
+  .mini-btn.stop { background: rgba(220,38,38,.75); }
+  .mini-btn.stop:active { background:#b91c1c; }
 
-  /* ===== TOAST / MODAL ===== */
   .toast {
     position: fixed; left: 50%; transform: translateX(-50%) translateY(120%);
-    bottom: calc(84px + env(safe-area-inset-bottom));
+    bottom: calc(120px + env(safe-area-inset-bottom));
     background: #111827; color: #fff; font-size: .8rem; font-weight: 600;
     padding: 10px 16px; border-radius: 99px; z-index: 200;
     transition: transform .3s; max-width: 90%; text-align: center;
@@ -165,7 +172,7 @@
 </head>
 <body>
 
-<!-- ===== BARRA DE PROGRESSO GLOBAL ===== -->
+<!-- ===== BARRA DE PROGRESSO ===== -->
 <div class="progress-bar" id="progressBar">
   <div class="progress-top">
     <span class="progress-label">📚 Progresso</span>
@@ -174,8 +181,7 @@
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
   <div class="progress-actions">
     <button class="chip" id="btnFiltro">👁 Só não ouvidos</button>
-    <button class="chip continuo" id="btnContinuo">▶ Modo contínuo</button>
-    <button class="chip" id="btnProximo">⏭ Próximo bloco</button>
+    <button class="chip" id="btnPrimeiro">▶ Começar do primeiro não ouvido</button>
   </div>
 </div>
 
@@ -183,7 +189,7 @@
   <div id="materias"></div>
 </div>
 
-<!-- ===== MINI-PLAYER FIXO ===== -->
+<!-- ===== MINI-PLAYER (estilo YouTube) ===== -->
 <div class="mini-player" id="miniPlayer">
   <div class="mini-info">
     <div class="mini-title" id="miniTitle">—</div>
@@ -193,7 +199,7 @@
     <button class="mini-btn" id="btnPrev" title="Anterior">⏮</button>
     <button class="mini-btn play" id="btnPlayPause" title="Play/Pause">⏸</button>
     <button class="mini-btn" id="btnNext" title="Próximo">⏭</button>
-    <button class="mini-btn" id="btnStop" title="Parar">⏹</button>
+    <button class="mini-btn stop" id="btnStop" title="Parar">⏹</button>
   </div>
 </div>
 
@@ -203,7 +209,7 @@
 <div class="modal-overlay" id="modalRetomar">
   <div class="modal">
     <h3>Retomar estudo?</h3>
-    <p id="modalTexto">Você parou no bloco X. Deseja continuar de onde parou?</p>
+    <p id="modalTexto">Você parou em um bloco. Deseja continuar de onde parou?</p>
     <div class="modal-actions">
       <button class="secondary" id="btnRecomecar">Recomeçar</button>
       <button class="primary" id="btnContinuar">Continuar</button>
@@ -1432,14 +1438,13 @@ const MATERIAS = [
 ];
 
 /* =====================
-   LÓGICA DO APLICATIVO
+   LÓGICA — FILA CONTÍNUA ESTILO YOUTUBE
    ===================== */
-const STORAGE_KEY = 'estudo_102_limpo_v2';
+const STORAGE_KEY = 'estudo_102_fila_v1';
 let ouvidos = {};
 let tocandoChave = null;
 let synth = window.speechSynthesis;
 let listaBlocos = [];
-let modoContinuo = false;
 let filtroAtivo = false;
 let rateAtual = 1.0;
 let pausado = false;
@@ -1452,8 +1457,7 @@ const btnPlayPause = document.getElementById('btnPlayPause');
 const progressCount = document.getElementById('progressCount');
 const progressFill = document.getElementById('progressFill');
 const btnFiltro = document.getElementById('btnFiltro');
-const btnContinuo = document.getElementById('btnContinuo');
-const btnProximo = document.getElementById('btnProximo');
+const btnPrimeiro = document.getElementById('btnPrimeiro');
 const toastEl = document.getElementById('toast');
 const modalRetomar = document.getElementById('modalRetomar');
 const modalTexto = document.getElementById('modalTexto');
@@ -1462,11 +1466,7 @@ const modalTexto = document.getElementById('modalTexto');
 function salvar() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      ouvidos,
-      modoContinuo,
-      filtroAtivo,
-      rateAtual,
-      ultimaChave: tocandoChave
+      ouvidos, filtroAtivo, rateAtual, ultimaChave: tocandoChave
     }));
   } catch (e) {}
 }
@@ -1476,7 +1476,6 @@ function carregar() {
     if (!raw) return null;
     const d = JSON.parse(raw);
     ouvidos = d.ouvidos || {};
-    modoContinuo = d.modoContinuo || false;
     filtroAtivo = d.filtroAtivo || false;
     rateAtual = d.rateAtual || 1.0;
     return d.ultimaChave || null;
@@ -1493,12 +1492,8 @@ function toast(msg) {
 }
 
 /* ---------- Progresso ---------- */
-function totalBlocos() {
-  return MATERIAS.reduce((acc, m) => acc + m.blocos.length, 0);
-}
-function contarOuvidos() {
-  return Object.values(ouvidos).filter(Boolean).length;
-}
+function totalBlocos() { return MATERIAS.reduce((a, m) => a + m.blocos.length, 0); }
+function contarOuvidos() { return Object.values(ouvidos).filter(Boolean).length; }
 function atualizarProgresso() {
   const total = totalBlocos();
   const feitos = contarOuvidos();
@@ -1529,6 +1524,7 @@ function render() {
         <div class="texto">${b.texto.split("\n\n").map(p => `<p>${p}</p>`).join('')}</div>
         <div class="actions">
           <button class="btn-ouvir" data-chave="${chave}">🔊 Ouvir</button>
+          <button class="btn-fila" data-chave="${chave}" title="Tocar a partir daqui">▶ Fila</button>
         </div>
       `;
       sec.appendChild(div);
@@ -1542,6 +1538,9 @@ function render() {
       else tocarPorChave(chave);
     });
   });
+  document.querySelectorAll('.btn-fila').forEach(b => {
+    b.addEventListener('click', () => tocarPorChave(b.dataset.chave));
+  });
 
   aplicarFiltro();
   atualizarProgresso();
@@ -1550,8 +1549,7 @@ function render() {
 function aplicarFiltro() {
   document.querySelectorAll('.bloco').forEach(el => {
     const chave = el.id.replace('bloco-', '');
-    const jaOuvido = ouvidos[chave];
-    el.classList.toggle('hidden', filtroAtivo && jaOuvido);
+    el.classList.toggle('hidden', filtroAtivo && ouvidos[chave]);
   });
   document.querySelectorAll('.materia').forEach(sec => {
     const visiveis = sec.querySelectorAll('.bloco:not(.hidden)').length;
@@ -1561,7 +1559,7 @@ function aplicarFiltro() {
 }
 
 /* ---------- Player ---------- */
-function parar() {
+function parar(limparFila) {
   synth.cancel();
   pausado = false;
   if (tocandoChave) {
@@ -1573,7 +1571,7 @@ function parar() {
     }
   }
   tocandoChave = null;
-  miniPlayer.classList.remove('visible');
+  if (limparFila !== false) miniPlayer.classList.remove('visible');
   btnPlayPause.textContent = '⏸';
   salvar();
 }
@@ -1595,7 +1593,7 @@ function retomar() {
 }
 
 function tocarPorChave(chave) {
-  parar();
+  parar(false);
   const [mi, bi] = chave.split('-').map(Number);
   const b = MATERIAS[mi].blocos[bi];
   tocandoChave = chave;
@@ -1620,6 +1618,7 @@ function tocarPorChave(chave) {
   function falarProximo() {
     if (!tocandoChave || tocandoChave !== chave) return;
     if (idxP >= paragrafos.length) {
+      // bloco terminou
       ouvidos[chave] = true;
       salvar();
       atualizarProgresso();
@@ -1633,14 +1632,14 @@ function tocarPorChave(chave) {
         if (btnAtual) btnAtual.textContent = '🔊 Ouvir';
       }
       if (filtroAtivo) aplicarFiltro();
-      if (modoContinuo) {
-        const proximo = proximaChave(chave);
-        if (proximo) {
-          setTimeout(() => tocarPorChave(proximo), 600);
-          return;
-        }
+      // AUTOPLAY: emenda no próximo
+      const proximo = proximaChave(chave);
+      if (proximo) {
+        setTimeout(() => tocarPorChave(proximo), 400);
+      } else {
+        parar();
+        toast('Fim da fila 🎉');
       }
-      parar();
       return;
     }
     const u = new SpeechSynthesisUtterance(paragrafos[idxP]);
@@ -1672,26 +1671,29 @@ function chaveAnterior(chave) {
   return listaBlocos[idx - 1];
 }
 
-/* ---------- Controles do mini-player ---------- */
+/* ---------- Mini-player ---------- */
 btnPlayPause.addEventListener('click', () => {
   if (!tocandoChave) return;
   if (synth.speaking && !synth.paused) pausar();
   else if (synth.paused) retomar();
 });
-
 document.getElementById('btnNext').addEventListener('click', () => {
-  if (!tocandoChave) return;
+  if (!tocandoChave) {
+    const primeiro = listaBlocos.find(c => !ouvidos[c]) || listaBlocos[0];
+    tocarPorChave(primeiro);
+    return;
+  }
   const prox = proximaChave(tocandoChave);
   if (prox) tocarPorChave(prox);
-  else toast('Fim da lista');
+  else toast('Fim da fila');
 });
 document.getElementById('btnPrev').addEventListener('click', () => {
   if (!tocandoChave) return;
   const ant = chaveAnterior(tocandoChave);
   if (ant) tocarPorChave(ant);
-  else toast('Início da lista');
+  else toast('Início da fila');
 });
-document.getElementById('btnStop').addEventListener('click', parar);
+document.getElementById('btnStop').addEventListener('click', () => parar());
 
 miniRate.addEventListener('click', () => {
   const rates = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
@@ -1712,7 +1714,9 @@ miniRate.addEventListener('click', () => {
       ouvidos[chave] = true;
       salvar();
       atualizarProgresso();
-      parar();
+      const prox = proximaChave(chave);
+      if (prox) tocarPorChave(prox);
+      else parar();
     };
     synth.cancel();
     synth.speak(u);
@@ -1721,97 +1725,123 @@ miniRate.addEventListener('click', () => {
   }
 });
 
-/* ---------- Filtro / contínuo / próximo ---------- */
+/* ---------- Filtro / começar ---------- */
 btnFiltro.addEventListener('click', () => {
   filtroAtivo = !filtroAtivo;
   aplicarFiltro();
   salvar();
 });
-btnContinuo.addEventListener('click', () => {
-  modoContinuo = !modoContinuo;
-  btnContinuo.classList.toggle('active', modoContinuo);
-  toast(modoContinuo ? 'Modo contínuo ativado' : 'Modo contínuo desativado');
-  salvar();
-});
-btnProximo.addEventListener('click', () => {
-  const chave = tocandoChave || listaBlocos.find(c => !ouvidos[c]);
-  if (!chave) { toast('Tudo ouvido!'); return; }
-  const el = document.getElementById('bloco-' + chave);
-  if (el) {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    el.style.transition = 'box-shadow .3s';
-    el.style.boxShadow = '0 0 0 3px #3b82f6';
-    setTimeout(() => { el.style.boxShadow = ''; }, 1200);
-  }
+btnPrimeiro.addEventListener('click', () => {
+  const primeiro = listaBlocos.find(c => !ouvidos[c]) || listaBlocos[0];
+  tocarPorChave(primeiro);
 });
 
 /* ---------- Retomar ---------- */
 document.getElementById('btnContinuar').addEventListener('click', () => {
   modalRetomar.classList.remove('visible');
   const ultima = localStorage.getItem(STORAGE_KEY + '_ultima');
-  if (ultima) {
-    tocarPorChave(ultima);
-  }
+  if (ultima && listaBlocos.includes(ultima)) tocarPorChave(ultima);
 });
 document.getElementById('btnRecomecar').addEventListener('click', () => {
   modalRetomar.classList.remove('visible');
-  toast('Recomeçando do primeiro bloco');
-  const el = document.getElementById('bloco-0-0');
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  tocarPorChave(listaBlocos[0]);
 });
 
 /* ---------- Init ---------- */
 function init() {
-  const ultimaChave = carregar();
-  btnContinuo.classList.toggle('active', modoContinuo);
+  carregar();
   btnFiltro.classList.toggle('active', filtroAtivo);
   render();
 
-  // Salva chave atual periodicamente
   setInterval(() => {
     if (tocandoChave) {
       try { localStorage.setItem(STORAGE_KEY + '_ultima', tocandoChave); } catch(e){}
     }
   }, 2000);
 
-  // Modal retomar
   const ultima = localStorage.getItem(STORAGE_KEY + '_ultima');
-  if (ultima) {
+  if (ultima && listaBlocos.includes(ultima)) {
     const [mi, bi] = ultima.split('-').map(Number);
     const b = MATERIAS[mi] && MATERIAS[mi].blocos[bi];
     if (b) {
-      modalTexto.textContent = `Você parou em "${b.titulo} — ${b.heading}". Deseja continuar de onde parou?`;
-      setTimeout(() => modalRetomar.classList.add('visible'), 600);
+      modalTexto.textContent = `Você parou em "${b.titulo} — ${b.heading}". Deseja continuar?`;
+      setTimeout(() => modalRetomar.classList.add('visible'), 500);
     }
+  } else {
+    setTimeout(() => toast('Toque em ▶ Ouvir para começar a fila'), 1000);
   }
-
-  // Boas-vindas
-  setTimeout(() => toast('Toque em ▶ Ouvir para começar'), 1200);
 }
 
-/* ---------- API global para integração com Watch ---------- */
-window.playerPlay = function(chave) { if (chave) tocarPorChave(chave); else if (tocandoChave) retomar(); };
+/* =====================================================
+   API GLOBAL — para o Apple Watch chamar via URL scheme
+   Ex.: atalho do Watch abre:
+   audio.html?cmd=next
+   audio.html?cmd=prev
+   audio.html?cmd=play
+   audio.html?cmd=pause
+   audio.html?cmd=stop
+   ===================================================== */
+window.playerPlay = function(chave) {
+  if (chave) tocarPorChave(chave);
+  else if (tocandoChave) retomar();
+  else {
+    const primeiro = listaBlocos.find(c => !ouvidos[c]) || listaBlocos[0];
+    tocarPorChave(primeiro);
+  }
+};
 window.playerPause = function() { pausar(); };
 window.playerStop = function() { parar(); };
-window.playerNext = function() { const n = tocandoChave && proximaChave(tocandoChave); if (n) tocarPorChave(n); };
-window.playerPrev = function() { const p = tocandoChave && chaveAnterior(tocandoChave); if (p) tocarPorChave(p); };
-window.playerSetRate = function(r) { rateAtual = r; miniRate.textContent = r.toFixed(1) + '×'; };
+window.playerNext = function() {
+  if (!tocandoChave) {
+    const primeiro = listaBlocos.find(c => !ouvidos[c]) || listaBlocos[0];
+    tocarPorChave(primeiro);
+    return;
+  }
+  const prox = proximaChave(tocandoChave);
+  if (prox) tocarPorChave(prox);
+  else toast('Fim da fila');
+};
+window.playerPrev = function() {
+  if (!tocandoChave) return;
+  const ant = chaveAnterior(tocandoChave);
+  if (ant) tocarPorChave(ant);
+};
+window.playerSetRate = function(r) {
+  rateAtual = r;
+  miniRate.textContent = r.toFixed(1) + '×';
+  salvar();
+};
 window.playerState = function() {
+  const [mi, bi] = (tocandoChave || '0-0').split('-').map(Number);
+  const b = MATERIAS[mi] && MATERIAS[mi].blocos[bi];
   return {
     tocando: tocandoChave,
-    pausado: pausado,
+    titulo: b ? `${b.titulo} — ${b.heading}` : null,
+    pausado,
     rate: rateAtual,
-    titulo: miniTitle.textContent,
     ouvidos: contarOuvidos(),
     total: totalBlocos()
   };
 };
 
-// Detecta iOS
+/* ---------- Detecta comando via URL (vindo do atalho do Watch) ---------- */
+(function handleURLCommand() {
+  const params = new URLSearchParams(location.search);
+  const cmd = params.get('cmd');
+  if (!cmd) return;
+  setTimeout(() => {
+    switch (cmd) {
+      case 'play':  window.playerPlay();  break;
+      case 'pause': window.playerPause(); break;
+      case 'next':  window.playerNext();  break;
+      case 'prev':  window.playerPrev();  break;
+      case 'stop':  window.playerStop();  break;
+    }
+  }, 800); // aguarda init
+})();
+
+/* ---------- Detecta iOS ---------- */
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-if (isIOS) {
-  document.documentElement.style.setProperty('--safe-bottom', 'env(safe-area-inset-bottom)');
-}
 
 init();
 </script>
