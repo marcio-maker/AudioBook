@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1e3a8a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Estudo — RH (Áudio)</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: #f4f6f9; color: #1f2937; line-height: 1.6; font-size: 16px;
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .container { width:100%; max-width:640px; margin:0 auto; padding:12px; display:flex; flex-direction:column; min-height:100dvh; }
+
+  header {
+    background:#1e3a8a; color:#fff; padding:14px 16px; border-radius:12px;
+    margin-bottom:12px; position:sticky; top:0; z-index:10;
+  }
+  header h1 { font-size:1rem; font-weight:700; }
+  header p { font-size:.8rem; opacity:.85; margin-top:2px; }
+
+  .card {
+    background:#fff; border-radius:14px; padding:18px 16px;
+    box-shadow:0 2px 10px rgba(0,0,0,.06); margin-bottom:12px;
+  }
+
+  /* controles globais */
+  .controls { display:flex; flex-direction:column; gap:10px; }
+  .row { display:flex; gap:8px; align-items:center; }
+  .row label { font-size:.85rem; color:#6b7280; font-weight:600; min-width:74px; }
+  select, input[type="range"] {
+    flex:1; padding:10px 12px; border:2px solid #e5e7eb; border-radius:10px;
+    font-size:16px; font-family:inherit; background:#f9fafb; color:#1f2937;
+    -webkit-appearance:none; appearance:none;
+  }
+  select { background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='3'><path d='M6 9l6 6 6-6'/></svg>"); background-repeat:no-repeat; background-position:right 12px center; padding-right:36px; }
+  input[type="range"] { padding:0; }
+
+  /* blocos */
+  .bloco {
+    background:#fff; border-radius:14px; padding:16px 14px;
+    box-shadow:0 2px 8px rgba(0,0,0,.05); margin-bottom:12px;
+    border-left:4px solid #e5e7eb; transition:border-color .2s;
+  }
+  .bloco.ouvido { border-left-color:#16a34a; }
+  .bloco.tocando { border-left-color:#1e3a8a; box-shadow:0 4px 16px rgba(30,58,138,.18); }
+
+  .bloco .titulo {
+    font-size:.78rem; font-weight:700; color:#1e3a8a;
+    text-transform:uppercase; letter-spacing:.4px; margin-bottom:6px;
+  }
+  .bloco h2 { font-size:1.05rem; font-weight:700; margin-bottom:10px; color:#111827; }
+  .bloco .texto {
+    font-size:.95rem; color:#374151; white-space:pre-line;
+  }
+  .bloco .texto p { margin-bottom:10px; }
+  .bloco .texto p:last-child { margin-bottom:0; }
+
+  .bloco .actions { display:flex; gap:8px; margin-top:14px; }
+  .btn-ouvir, .btn-parar {
+    flex:1; min-height:48px; border:none; border-radius:10px;
+    font-size:.95rem; font-weight:700; font-family:inherit; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+  }
+  .btn-ouvir { background:#1e3a8a; color:#fff; }
+  .btn-ouvir:active { background:#1e40af; }
+  .btn-ouvir.tocando { background:#dc2626; }
+  .btn-ouvir.tocando:active { background:#b91c1c; }
+  .btn-parar { background:#e5e7eb; color:#374151; flex:0 0 48px; padding:0; }
+  .btn-parar:active { background:#d1d5db; }
+
+  .aviso {
+    background:#fef3c7; color:#78350f; border:1px solid #fcd34d;
+    border-radius:10px; padding:12px 14px; font-size:.85rem;
+    margin-bottom:12px; line-height:1.5;
+  }
+  .aviso b { display:block; margin-bottom:4px; }
+  .aviso button {
+    background:#78350f; color:#fff; border:none; border-radius:8px;
+    padding:8px 12px; font-size:.8rem; font-weight:700; cursor:pointer;
+    font-family:inherit; margin-top:8px;
+  }
+  .aviso.ok { background:#dcfce7; color:#14532d; border-color:#86efac; }
+
+  .bar {
+    height:6px; background:#e5e7eb; border-radius:99px; overflow:hidden;
+    margin-bottom:12px;
+  }
+  .bar > div { height:100%; width:0%; background:#1e3a8a; transition:width .3s; }
+
+  footer { text-align:center; font-size:.75rem; color:#9ca3af; padding:16px 0 8px; }
+
+  @media (min-width:600px) {
+    body { font-size:17px; }
+    .container { padding:20px; }
+    header { padding:18px 20px; }
+    header h1 { font-size:1.15rem; }
+    .card, .bloco { padding:22px 20px; }
+    .bloco h2 { font-size:1.15rem; }
+    .bloco .texto { font-size:1rem; }
+  }
+  button, input, select { font-size:16px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>🎧 Estudo — Gestão de Pessoas / RH</h1>
+    <p>Teoria em áudio • toque em 🔊 para ouvir</p>
+  </header>
+
+  <div class="aviso" id="avisoVoz">
+    <b>⚠️ Antes de ouvir</b>
+    Baixe a voz "Luciana (Melhorada)" no iPhone:<br>
+    Ajustes → Acessibilidade → Conteúdo Falado → Vozes → Português (Brasil).
+    <button id="fecharAviso">Entendi</button>
+  </div>
+
+  <div class="bar"><div id="progress"></div></div>
+
+  <div class="card controls">
+    <div class="row">
+      <label>Voz</label>
+      <select id="vozSelect"></select>
+    </div>
+    <div class="row">
+      <label>Velocidade</label>
+      <input type="range" id="velocidade" min="0.7" max="1.3" step="0.05" value="1">
+      <span id="velLabel" style="font-size:.85rem;color:#6b7280;min-width:40px;text-align:right">1.0x</span>
+    </div>
+  </div>
+
+  <div id="blocos"></div>
+
+  <footer>Feito para estudo pessoal • RH</footer>
+</div>
+
+<script>
+/* =====================================================
+   CONTEÚDO — Gestão de Pessoas / RH
+   Texto escrito para ser FALADO: frases curtas,
+   sem siglas, sem símbolos, sem parênteses.
+   ===================================================== */
+const BLOCOS = [
+  {
+    titulo: "Bloco 1",
+    heading: "O que é gestão de pessoas",
+    texto: [
+      "Gestão de pessoas é a área da organização responsável por tudo que envolve o ser humano no trabalho. Isso inclui atrair, desenvolver, motivar e manter as pessoas dentro da empresa.",
+      "Durante muito tempo, essa área foi vista apenas como operacional. Cuidava de folha de pagamento, ponto, férias e documentação. Era o setor que resolvia papelada.",
+      "Hoje, o cenário mudou. A gestão de pessoas passou a ser estratégica. Ela participa das decisões importantes da organização. Ajuda a definir rumos, preparar equipes e garantir que a empresa tenha as pessoas certas nos lugares certos.",
+      "Existe uma diferença importante entre gestão de pessoas e gestão de recursos humanos. Gestão de recursos humanos é o nome mais antigo, ligado à ideia de que pessoas são recursos, como máquinas ou dinheiro. Gestão de pessoas é o nome mais moderno, que enxerga o ser humano como parceiro da organização, e não como simples recurso.",
+      "Essa mudança de nome reflete uma mudança de mentalidade. Antes, a pessoa era vista como custo. Agora, é vista como diferencial competitivo.",
+      "Então, guarde bem essa ideia. Gestão de pessoas é a área que cuida do ser humano no trabalho. E quando ela é estratégica, deixa de apenas resolver problemas e passa a construir resultados."
+    ].join("\n\n")
+  },
+  {
+    titulo: "Bloco 2",
+    heading: "Gestão estratégica de pessoas",
+    texto: [
+      "A gestão estratégica de pessoas é quando a área de recursos humanos deixa de agir só no operacional e passa a participar do planejamento da organização.",
+      "Na prática, significa alinhar as políticas de pessoas aos objetivos do negócio. Se a empresa quer crescer, o setor de pessoas precisa preparar a equipe para esse crescimento. Se a empresa quer inovar, precisa contratar e desenvolver pessoas com esse perfil.",
+      "Uma gestão estratégica de pessoas trabalha em quatro frentes principais. Primeiro, atrai talentos. Segundo, desenvolve esses talentos. Terceiro, mantém as pessoas boas na empresa. Quarto, garante que tudo isso esteja ligado à estratégia.",
+      "Existe uma diferença clara entre o modelo tradicional e o estratégico. No modelo tradicional, o setor de pessoal só executa. Paga, registra, controla. No modelo estratégico, o setor de pessoal participa das decisões. Antecipa necessidades. Propõe soluções.",
+      "Um exemplo ajuda a entender. Imagine uma empresa que decidiu abrir uma filial em outra cidade. No modelo tradicional, o setor de pessoal só vai agir quando a filial já estiver montada, contratando quem aparecer. No modelo estratégico, o setor de pessoal participa desde o começo. Planeja quantas pessoas serão necessárias, que perfis, que treinamento, em que prazo.",
+      "Guarde isto: gestão estratégica de pessoas é alinhar gente e negócio. Não é só contratar e pagar. É pensar no presente e no futuro da organização."
+    ].join("\n\n")
+  },
+  {
+    titulo: "Bloco 3",
+    heading: "Recrutamento",
+    texto: [
+      "Recrutamento é o processo de atrair candidatos para uma vaga. É a etapa em que a empresa vai ao mercado buscar pessoas com potencial para ocupar determinada função.",
+      "Recrutamento não é a mesma coisa que seleção. Muita gente confunde. Recrutamento atrai. Seleção escolhe. São duas etapas diferentes, uma depois da outra.",
+      "Existem dois tipos principais de recrutamento. O recrutamento interno e o recrutamento externo.",
+      "O recrutamento interno busca candidatos dentro da própria empresa. Pode ser por promoção, transferência ou remanejamento. Tem vantagens. Motiva quem já trabalha ali, aproveita quem já conhece a cultura, custa menos e é mais rápido. Tem também desvantagens. Pode gerar acomodação, porque as pessoas sabem que a vaga vai ser preenchida por alguém de dentro. E fecha a porta para ideias novas de fora.",
+      "O recrutamento externo busca candidatos no mercado. Anúncios, redes sociais, indicações, sites de emprego, agências. Tem vantagens. Traz sangue novo, novas ideias, novas experiências. Tem desvantagens. Custa mais, demora mais, e a pessoa precisa de tempo para se adaptar à cultura da empresa.",
+      "Existe ainda o recrutamento misto, que combina os dois. É o mais comum nas organizações bem estruturadas. Primeiro, olham para dentro. Se não encontram, vão para fora.",
+      "Guarde isto: recrutamento é atrair. E a escolha entre interno e externo depende do momento da empresa e do tipo de vaga."
+    ].join("\n\n")
+  },
+  {
+    titulo: "Bloco 4",
+    heading: "Seleção de pessoas",
+    texto: [
+      "Seleção é o processo de escolher, entre os candidatos recrutados, aquele que tem mais chance de dar certo na vaga.",
+      "Se o recrutamento atrai, a seleção filtra. Ela compara o perfil de cada candidato com o que a vaga exige. E escolhe o mais adequado.",
+      "Existem várias técnicas de seleção. As principais são a entrevista, as provas de conhecimento, os testes psicológicos, as dinâmicas de grupo e a análise curricular.",
+      "A entrevista é a técnica mais usada. Pode ser individual ou em grupo. Pode ser estruturada, com perguntas fixas, ou livre, com conversa aberta. A estruturada é mais justa, porque compara todos os candidatos com os mesmos critérios.",
+      "As provas de conhecimento medem o quanto o candidato domina determinado assunto ou técnica. Podem ser escritas, práticas ou orais.",
+      "Os testes psicológicos avaliam características pessoais, como raciocínio, personalidade e comportamento. Devem ser aplicados por psicólogos.",
+      "As dinâmicas de grupo observam como o candidato se comporta em situações coletivas. Mostram liderança, comunicação, capacidade de trabalhar em equipe.",
+      "A análise curricular é a leitura do histórico do candidato. Formação, experiências anteriores, cursos. Serve como triagem inicial, mas não decide sozinha.",
+      "Um bom processo de seleção combina várias técnicas. Nenhuma técnica sozinha é suficiente. E existe um princípio que vale sempre: quanto mais claros os critérios da vaga, melhor a seleção.",
+      "Guarde isto: recrutamento atrai, seleção escolhe. E quanto melhor a seleção, menor a rotatividade de pessoal depois."
+    ].join("\n\n")
+  },
+  {
+    titulo: "Bloco 5",
+    heading: "Treinamento e desenvolvimento",
+    texto: [
+      "Treinamento é o processo de preparar a pessoa para executar melhor o trabalho que ela já faz. Desenvolvimento é o processo de preparar a pessoa para funções futuras, mais amplas.",
+      "A diferença é o foco no tempo. Treinamento olha para o presente. Desenvolvimento olha para o futuro. Treinamento ensina o que a pessoa precisa saber agora. Desenvolvimento prepara para o que ela pode vir a fazer depois.",
+      "Existe uma sigla muito cobrada em prova que resume o que o treinamento trabalha. É o C H A. Conhecimento, habilidade e atitude.",
+      "Conhecimento é o saber. É a informação que a pessoa tem sobre o trabalho. Habilidade é o saber fazer. É a prática, a técnica. Atitude é o querer fazer. É a disposição, o comportamento.",
+      "Um treinamento completo trabalha os três. Não adianta ensinar a técnica se a pessoa não quer aplicar. Não adianta querer que a pessoa faça se ela não sabe como.",
+      "O treinamento costuma seguir quatro etapas. Primeiro, o levantamento de necessidades. Segundo, o planejamento. Terceiro, a execução. Quarto, a avaliação.",
+      "O levantamento de necessidades identifica o que está faltando. Pode ser feito ouvindo chefes, analisando erros, observando o desempenho.",
+      "O planejamento define o que será ensinado, para quem, como, quando e onde.",
+      "A execução é o treinamento acontecendo. Pode ser presencial, à distância, no próprio trabalho ou fora dele.",
+      "A avaliação mede se o treinamento funcionou. Compara o desempenho antes e depois. Se o resultado não mudou, o treinamento precisa ser revisto.",
+      "Guarde isto: treinamento trabalha conhecimento, habilidade e atitude. E só termina quando o desempenho melhora de verdade."
+    ].join("\n\n")
+  },
+  {
+    titulo: "Bloco 6",
+    heading: "Avaliação de desempenho",
+    texto: [
+      "Avaliação de desempenho é o processo de medir como cada pessoa está executando o seu trabalho.",
+      "Serve para várias coisas. Identificar quem está indo bem. Identificar quem precisa de apoio. Decidir promoções. Definir treinamentos. Corrigir rumos.",
+      "Existem vários métodos de avaliação. Os mais cobrados em prova são a escala gráfica, a escolha forçada, a pesquisa de campo, os incidentes críticos e a avaliação por objetivos.",
+      "A escala gráfica avalia o desempenho por fatores, como produtividade, qualidade e assiduidade. Cada fator recebe uma nota. É simples, mas pode ser superficial.",
+      "A escolha forçada apresenta pares de frases e obriga o avaliador a escolher uma. Reduz a subjetividade, mas é cansativa para quem avalia.",
+      "A pesquisa de campo envolve o setor de pessoal entrevistando o chefe e o avaliado. É mais profunda, mas consome tempo.",
+      "Os incidentes críticos registram comportamentos positivos e negativos ao longo do período. É rica em detalhe, mas exige disciplina para anotar.",
+      "A avaliação por objetivos compara o que foi combinado com o que foi entregue. É muito usada em cargos de gestão.",
+      "Independente do método, alguns princípios valem sempre. Os critérios precisam ser claros. Precisam ser combinados antes. Precisam estar ligados às responsabilidades da função. E a avaliação precisa gerar retorno para a pessoa avaliada.",
+      "Guarde isto: avaliação de desempenho sem critério claro vira julgamento pessoal. E julgamento pessoal não melhora ninguém."
+    ].join("\n\n")
+  },
+  {
+    titulo: "Bloco 7",
+    heading: "Motivação no trabalho",
+    texto: [
+      "Motivação é o conjunto de forças que impulsiona a pessoa a agir de determinada maneira.",
+      "No trabalho, a motivação não é igual para todo mundo. Cada pessoa tem necessidades diferentes. O que motiva uma pode não motivar outra.",
+      "Existem várias teorias sobre motivação. As mais cobradas são a hierarquia das necessidades, de Maslow, e a teoria dos dois fatores, de Herzberg.",
+      "Maslow organizou as necessidades humanas em cinco níveis. Na base, as necessidades fisiológicas, como fome e sono. Depois, segurança. Depois, as necessidades sociais, de pertencimento. Depois, estima, reconhecimento. No topo, autorrealização.",
+      "A ideia de Maslow é que a pessoa busca primeiro o que está na base. Só depois de satisfazer um nível ela passa para o próximo.",
+      "Herzberg dividiu os fatores que influenciam o trabalho em dois grupos. Os fatores higiênicos e os fatores motivacionais.",
+      "Fatores higiênicos são aqueles ligados ao ambiente. Salário, condições de trabalho, políticas da empresa, relação com colegas e chefes. Quando esses fatores estão ruins, eles causam insatisfação. Quando estão bons, apenas evitam a insatisfação. Não motivam por si sós.",
+      "Fatores motivacionais são aqueles ligados ao conteúdo do trabalho. Reconhecimento, responsabilidade, crescimento, realização. Esses sim motivam de verdade.",
+      "É por isso que só aumentar salário não resolve tudo. Salário é fator higiênico. Se estiver ruim, atrapalha. Mas se estiver bom, não garante que a pessoa esteja motivada.",
+      "Guarde isto: motivação é multifatorial. Envolve o indivíduo, o ambiente e o conteúdo do trabalho. E nenhuma empresa motiva ninguém. Ela cria condições para que a pessoa se motive."
+    ].join("\n\n")
+  },
+  {
+    titulo: "Bloco 8",
+    heading: "Liderança",
+    texto: [
+      "Liderança é a capacidade de influenciar pessoas para alcançar objetivos.",
+      "Liderança não é a mesma coisa que chefia. Chefia vem do cargo. Liderança vem do comportamento. Você pode ser chefe sem ser líder, e líder sem ser chefe.",
+      "Existem várias teorias sobre liderança. As principais são a teoria dos traços, a teoria comportamental e a teoria situacional.",
+      "A teoria dos traços tentou identificar características inatas do líder. Carisma, coragem, inteligência. Essa teoria caiu por terra, porque não existe um conjunto fixo de traços que garanta liderança.",
+      "A teoria comportamental olhou para o que o líder faz, não para o que ele é. Identificou dois estilos principais. O líder voltado para a tarefa e o líder voltado para as pessoas. O primeiro foca no resultado. O segundo foca no relacionamento.",
+      "A teoria situacional diz que não existe um estilo único de liderança. O bom líder ajusta o estilo à situação e à maturidade da equipe. Com uma equipe nova, ele dirige mais. Com uma equipe experiente, ele delega mais.",
+      "Existe uma ideia muito importante nessa teoria. Liderança eficaz é a que se adapta. Não existe um jeito certo para todos os momentos.",
+      "Um líder eficaz faz algumas coisas bem. Comunica com clareza. Ouve. Dá direção. Desenvolve as pessoas. Reconhece o bom trabalho. Corrige sem humilhar.",
+      "Guarde isto: liderança é influência, não cargo. E liderança eficaz é a que se ajusta à situação, sem perder o foco nos objetivos e nas pessoas."
+    ].join("\n\n")
+  },
+  {
+    titulo: "Bloco 9",
+    heading: "Cultura e clima organizacional",
+    texto: [
+      "Cultura organizacional e clima organizacional são conceitos diferentes, mas os dois falam sobre o ambiente interno da empresa.",
+      "Cultura organizacional é o conjunto de valores, crenças, hábitos e normas compartilhados pelas pessoas da organização. É a identidade da empresa. Aquilo que ela é.",
+      "A cultura é construída aos poucos. Vem dos fundadores, das histórias, dos rituais, dos símbolos, das decisões repetidas. E é difícil de mudar, porque está enraizada.",
+      "A cultura aparece em coisas visíveis, como a forma de vestir, a linguagem usada, o layout do escritório. E aparece em coisas invisíveis, como o que é valorizado, o que é punido, o que é considerado certo.",
+      "Clima organizacional é a percepção momentânea que as pessoas têm do ambiente de trabalho. É como elas se sentem ali naquele período. Satisfeitas, tensas, animadas, desmotivadas.",
+      "A diferença principal é o tempo. Cultura é profunda e duradoura. Clima é superficial e mutável. Uma semana ruim pode piorar o clima. Mas a cultura continua a mesma.",
+      "O clima é medido por pesquisas periódicas. A cultura é estudada por observação e análise profunda.",
+      "Existe uma relação entre os dois. Uma cultura saudável tende a gerar bom clima. Mas clima bom num mês não significa cultura boa. E vice-versa.",
+      "Guarde isto: cultura é o que a empresa é. Clima é como as pessoas estão se sentindo agora. São coisas diferentes, mas se influenciam."
+    ].join("\n\n")
+  },
+  {
+    titulo: "Bloco 10",
+    heading: "Negociação",
+    texto: [
+      "Negociação é o processo de buscar um acordo entre duas ou mais partes que têm interesses diferentes.",
+      "No trabalho do administrador de recursos humanos, a negociação aparece o tempo todo. Negociar salário com candidato. Negociar prazo com chefia. Negociar conflito entre colegas. Negociar acordo coletivo com sindicato.",
+      "Existem dois tipos principais de negociação. A negociação distributiva e a negociação integrativa.",
+      "A negociação distributiva é aquela em que o ganho de uma parte significa a perda da outra. É o jogo de soma zero. Um ganha, o outro perde. Também é chamada de negociação ganha-perde.",
+      "A negociação integrativa busca soluções em que as duas partes ganham. É o jogo de soma positiva. Também chamada de ganha-ganha.",
+      "A negociação ganha-ganha é mais difícil de conseguir, mas costuma gerar acordos melhores e mais duradouros. Porque as duas partes saem satisfeitas e cumprem o que foi combinado.",
+      "Existe uma ideia essencial em negociação. Não se negocia posição, negocia-se interesse. Posição é o que a pessoa diz que quer. Interesse é o motivo por trás. Duas pessoas podem ter posições opostas e interesses compatíveis.",
+      "Um bom negociador faz algumas coisas. Prepara-se antes. Ouve mais do que fala. Identifica os interesses por trás das posições. Busca alternativas. Não decide no calor da emoção.",
+      "Guarde isto: negociar bem não é ganhar do outro. É chegar a um acordo que funcione para os dois lados e que se sustente no tempo."
+    ].join("\n\n")
+  },
+  {
+    titulo: "Bloco 11",
+    heading: "Cargos, salários e remuneração",
+    texto: [
+      "Cargos, salários e remuneração formam um conjunto de práticas que organiza como as pessoas são pagas na empresa.",
+      "Cargo é o conjunto de funções com responsabilidades parecidas. Cada cargo tem um nome, uma descrição e requisitos.",
+      "Descrição de cargo é o documento que diz o que o ocupante faz. Tarefas, responsabilidades, condições de trabalho.",
+      "Análise de cargo é o estudo que se faz para chegar a essa descrição. É a pesquisa que vem antes.",
+      "Salário é a contraprestação paga pelo empregador ao empregado em razão do trabalho. Pode ser fixo, variável ou misto.",
+      "Remuneração é o conjunto de tudo que o empregado recebe pelo trabalho. Inclui o salário e também outros valores, como comissões, gratificações, adicionais e benefícios.",
+      "Existe uma diferença entre salário e remuneração. Salário é a parte fixa. Remuneração é o todo.",
+      "Benefícios são vantagens oferecidas além do salário. Vale-transporte, vale-refeição, plano de saúde, seguro de vida. Alguns são obrigatórios por lei. Outros são oferecidos por escolha da empresa.",
+      "Política salarial é o conjunto de regras que a empresa usa para decidir quanto pagar. Envolve pesquisas de mercado, definição de faixas e critérios de progressão.",
+      "Existem também as chamadas obrigações legais. O décimo terceiro salário. As férias remuneradas. O fundo de garantia. Os adicionais de insalubridade e periculosidade. As horas extras. Tudo isso é tratado pela administração de pessoal.",
+      "Guarde isto: salário é a parte fixa. Remuneração é o conjunto. E uma boa política salarial equilibra o que a empresa pode pagar com o que o mercado oferece."
+    ].join("\n\n")
+  },
+  {
+    titulo: "Bloco 12",
+    heading: "Saúde e segurança no trabalho",
+    texto: [
+      "Saúde e segurança no trabalho é o conjunto de ações que protegem a integridade física e mental do trabalhador.",
+      "Essas ações não são opcionais. São obrigações legais do empregador. E são também um investimento, porque ambientes saudáveis produzem mais e geram menos afastamentos.",
+      "Existem vários riscos no ambiente de trabalho. Riscos físicos, como ruído, calor, vibração e radiação. Riscos químicos, como poeira, gases e produtos tóxicos. Riscos biológicos, como vírus, bactérias e fungos. Riscos ergonômicos, como postura inadequada e movimentos repetitivos. E riscos de acidente, como máquinas sem proteção e trabalhos em altura.",
+      "Existem dois adicionais ligados a esses riscos. O adicional de insalubridade e o adicional de periculosidade.",
+      "Insalubridade está ligada a risco à saúde. O trabalhador fica exposto a agentes que podem adoecê-lo. Ruído alto, calor excessivo, produtos químicos, agentes biológicos.",
+      "Periculosidade está ligada a risco à vida ou à integridade física. Explosivos, inflamáveis, energia elétrica, segurança pessoal, certas atividades com motocicleta.",
+      "A diferença é o tipo de risco. Insalubridade adoece. Periculosidade mata ou fere de repente.",
+      "Existem também as normas regulamentadoras. São regras técnicas do Ministério do Trabalho que definem como cada atividade deve ser feita com segurança. Elas são identificadas por números.",
+      "Entre as medidas de proteção, existem os equipamentos de proteção individual, chamados de E P I. São aqueles usados pela própria pessoa. Capacete, luva, óculos, protetor auricular. Existem também os equipamentos de proteção coletiva, chamados de E P C. São aqueles que protegem todo mundo no ambiente. Extintor, corrimão, exaustor, sinalização.",
+      "Guarde isto: a empresa precisa proteger a saúde e a segurança do trabalhador. E quando o risco não pode ser eliminado, o trabalhador tem direito a adicional."
+    ].join("\n\n")
+  },
+  {
+    titulo: "Bloco 13",
+    heading: "Administração de pessoal — rotinas",
+    texto: [
+      "Administração de pessoal é a parte mais operacional do setor de recursos humanos. Cuida da vida funcional do empregado, do começo ao fim do contrato.",
+      "Começa na admissão. Recolher documentos, registrar o contrato, fazer exames admissionais, cadastrar nos sistemas. Cada passo tem prazo e formato exigidos pela lei.",
+      "Continua no dia a dia. Controlar frequência e ponto. Calcular folha de pagamento. Processar férias. Lançar afastamentos. Atualizar cadastros.",
+      "O ponto é o registro da jornada. Marca entrada, saída, intervalos. Pode ser manual, mecânico ou eletrônico. A jornada normal tem limites legais. O que passa disso vira hora extra.",
+      "A folha de pagamento é o documento que calcula tudo que o empregado deve receber e tudo que deve ser descontado. Salário, horas extras, adicionais, faltas, descontos legais. Também calcula os encargos que a empresa paga sobre a mão de obra.",
+      "As férias são um direito anual do trabalhador. Precisam ser concedidas dentro de um período determinado. Podem ser divididas em partes, mas dentro dos limites da lei. E são sempre remuneradas com acréscimo.",
+      "Os afastamentos legais incluem licenças médicas, licença-maternidade, licença-paternidade, serviço militar, entre outros. Cada um tem regras próprias de duração e de pagamento.",
+      "A rescisão é o encerramento do contrato. Pode ocorrer por vários motivos. Pedido de demissão, dispensa sem justa causa, dispensa por justa causa, fim de contrato, aposentadoria. Cada tipo gera verbas diferentes.",
+      "O aviso-prévio é a comunicação antecipada de que o contrato será encerrado. Pode ser trabalhado ou indenizado. O prazo varia conforme o tempo de serviço.",
+      "Guarde isto: administração de pessoal garante que tudo o que a lei manda seja cumprido, no prazo e na forma corretos. É a base sobre a qual as demais práticas de recursos humanos se sustentam."
+    ].join("\n\n")
+  }
+];
+
+/* =====================
+   ESTADO E LÓGICA
+   ===================== */
+const STORAGE_KEY = 'estudo_rh_v1';
+let ouvidos = {};       // { indexBloco: true }
+let vozEscolhida = null;
+let velocidade = 1;
+let tocandoIdx = null;
+let synth = window.speechSynthesis;
+
+const blocosEl = document.getElementById('blocos');
+const progressEl = document.getElementById('progress');
+const vozSelect = document.getElementById('vozSelect');
+const velocidadeInput = document.getElementById('velocidade');
+const velLabel = document.getElementById('velLabel');
+const avisoVoz = document.getElementById('avisoVoz');
+
+/* ===== Persistência ===== */
+function salvar() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      ouvidos,
+      vozEscolhida,
+      velocidade
+    }));
+  } catch (e) {}
+}
+function carregar() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    ouvidos = d.ouvidos || {};
+    vozEscolhida = d.vozEscolhida || null;
+    velocidade = d.velocidade || 1;
+  } catch (e) {}
+}
+
+/* ===== Vozes ===== */
+let vozesDisponiveis = [];
+function carregarVozes() {
+  vozesDisponiveis = synth.getVoices().filter(v => v.lang && v.lang.toLowerCase().startsWith('pt'));
+  vozSelect.innerHTML = '';
+
+  if (vozesDisponiveis.length === 0) {
+    vozSelect.innerHTML = '<option value="">Nenhuma voz em português encontrada</option>';
+    return;
+  }
+
+  // Ordena: pt-BR primeiro, "melhorada"/"enhanced" antes das compactas
+  vozesDisponiveis.sort((a, b) => {
+    const aBR = a.lang.toLowerCase().includes('br') ? 1 : 0;
+    const bBR = b.lang.toLowerCase().includes('br') ? 1 : 0;
+    if (aBR !== bBR) return bBR - aBR;
+    const aEnh = /enhanced|melhorada|premium|siri/i.test(a.name) ? 1 : 0;
+    const bEnh = /enhanced|melhorada|premium|siri/i.test(b.name) ? 1 : 0;
+    return bEnh - aEnh;
+  });
+
+  vozesDisponiveis.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = `${v.name} (${v.lang})`;
+    vozSelect.appendChild(opt);
+  });
+
+  // Seleciona a voz salva ou a primeira
+  let idxSelecionado = 0;
+  if (vozEscolhida) {
+    const found = vozesDisponiveis.findIndex(v => v.name === vozEscolhida);
+    if (found >= 0) idxSelecionado = found;
+  }
+  vozSelect.value = idxSelecionado;
+  vozEscolhida = vozesDisponiveis[idxSelecionado].name;
+
+  if (vozesDisponiveis.length > 0) {
+    avisoVoz.classList.add('ok');
+    avisoVoz.innerHTML = '<b>✅ Voz pronta</b>Escolha a melhor voz no seletor acima. Recomendamos "Luciana" ou uma voz marcada como "enhanced" ou "melhorada".';
+  }
+}
+
+vozSelect.addEventListener('change', () => {
+  vozEscolhida = vozesDisponiveis[parseInt(vozSelect.value)].name;
+  salvar();
+  if (tocandoIdx !== null) {
+    parar();
+    tocarBloco(tocandoIdx);
+  }
+});
+
+velocidadeInput.addEventListener('input', () => {
+  velocidade = parseFloat(velocidadeInput.value);
+  velLabel.textContent = velocidade.toFixed(1) + 'x';
+  salvar();
+  if (tocandoIdx !== null) {
+    parar();
+    tocarBloco(tocandoIdx);
+  }
+});
+
+/* ===== Render blocos ===== */
+function render() {
+  blocosEl.innerHTML = '';
+  BLOCOS.forEach((b, i) => {
+    const div = document.createElement('div');
+    div.className = 'bloco' + (ouvidos[i] ? ' ouvido' : '');
+    div.id = 'bloco-' + i;
+    div.innerHTML = `
+      <div class="titulo">${b.titulo}${ouvidos[i] ? ' • ouvido' : ''}</div>
+      <h2>${b.heading}</h2>
+      <div class="texto">${b.texto.split("\n\n").map(p => `<p>${p}</p>`).join('')}</div>
+      <div class="actions">
+        <button class="btn-ouvir" data-i="${i}">🔊 Ouvir</button>
+        <button class="btn-parar" data-i="${i}" title="Parar">⏹</button>
+      </div>
+    `;
+    blocosEl.appendChild(div);
+  });
+
+  document.querySelectorAll('.btn-ouvir').forEach(b => {
+    b.addEventListener('click', () => {
+      const i = parseInt(b.dataset.i);
+      if (tocandoIdx === i) parar();
+      else tocarBloco(i);
+    });
+  });
+  document.querySelectorAll('.btn-parar').forEach(b => {
+    b.addEventListener('click', () => parar());
+  });
+
+  atualizarProgresso();
+}
+
+function atualizarProgresso() {
+  const total = BLOCOS.length;
+  const feitos = Object.keys(ouvidos).length;
+  progressEl.style.width = (feitos / total * 100) + '%';
+}
+
+/* ===== Tocar ===== */
+function parar() {
+  synth.cancel();
+  if (tocandoIdx !== null) {
+    const el = document.getElementById('bloco-' + tocandoIdx);
+    if (el) {
+      el.classList.remove('tocando');
+      const btn = el.querySelector('.btn-ouvir');
+      if (btn) btn.textContent = '🔊 Ouvir';
+    }
+  }
+  tocandoIdx = null;
+}
+
+function tocarBloco(i) {
+  parar();
+  const b = BLOCOS[i];
+  tocandoIdx = i;
+
+  const el = document.getElementById('bloco-' + i);
+  el.classList.add('tocando');
+  el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const btn = el.querySelector('.btn-ouvir');
+  btn.textContent = '⏸ Parar';
+
+  // Divide em parágrafos e lê em sequência — evita o problema do Safari de cortar textos longos
+  const paragrafos = b.texto.split("\n\n").filter(p => p.trim().length > 0);
+  let idxP = 0;
+
+  function falarProximo() {
+    if (idxP >= paragrafos.length) {
+      // terminou o bloco
+      ouvidos[i] = true;
+      salvar();
+      const elAtual = document.getElementById('bloco-' + i);
+      if (elAtual) {
+        elAtual.classList.remove('tocando');
+        elAtual.classList.add('ouvido');
+        const titulo = elAtual.querySelector('.titulo');
+        titulo.textContent = b.titulo + ' • ouvido';
+      }
+      const btnAtual = elAtual.querySelector('.btn-ouvir');
+      if (btnAtual) btnAtual.textContent = '🔊 Ouvir';
+      tocandoIdx = null;
+      atualizarProgresso();
+      render();
+      return;
+    }
+
+    const u = new SpeechSynthesisUtterance(paragrafos[idxP]);
+    u.lang = 'pt-BR';
+    u.rate = velocidade;
+    u.pitch = 1;
+    if (vozEscolhida) {
+      const voz = vozesDisponiveis.find(v => v.name === vozEscolhida);
+      if (voz) u.voice = voz;
+    }
+    u.onend = () => { idxP++; falarProximo(); };
+    u.onerror = () => { idxP++; falarProximo(); };
+    synth.speak(u);
+  }
+
+  falarProximo();
+}
+
+/* ===== Aviso ===== */
+document.getElementById('fecharAviso').addEventListener('click', () => {
+  avisoVoz.style.display = 'none';
+});
+
+/* ===== Init ===== */
+function init() {
+  carregar();
+  velocidadeInput.value = velocidade;
+  velLabel.textContent = velocidade.toFixed(1) + 'x';
+
+  // VoZes carregam assíncrono no Safari
+  if (synth.onvoiceschanged !== undefined) {
+    synth.onvoiceschanged = carregarVozes;
+  }
+  carregarVozes();
+  setTimeout(carregarVozes, 500); // fallback
+
+  render();
+}
+
+init();
+</script>
+</body>
+</html>
